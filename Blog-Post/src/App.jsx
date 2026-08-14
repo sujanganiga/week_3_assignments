@@ -1,122 +1,142 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [posts, setPosts] = useState([]);
+  const [search, setSearch] = useState("");
+
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [comments, setComments] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
+  // Fetch all posts
+  useEffect(() => {
+    fetch("https://jsonplaceholder.typicode.com/posts")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts");
+        }
+
+        return response.json();
+      })
+      .then((data) => {
+        setPosts(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError(error.message);
+        setLoading(false);
+      });
+  }, []);
+
+  // Filter posts
+  const filteredPosts = posts.filter((post) => {
+    return post.title.toLowerCase().includes(search.toLowerCase());
+  });
+
+  // Fetch comments
+  const showComments = (post) => {
+    setSelectedPost(post);
+    setCommentsLoading(true);
+    setComments([]);
+
+    fetch(
+      `https://jsonplaceholder.typicode.com/posts/${post.id}/comments`
+    )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch comments");
+        }
+
+        return response.json();
+      })
+      .then((data) => {
+        setComments(data);
+        setCommentsLoading(false);
+      })
+      .catch((error) => {
+        setError(error.message);
+        setCommentsLoading(false);
+      });
+  };
+
+  // Close comments
+  const closeComments = () => {
+    setSelectedPost(null);
+    setComments([]);
+    setError("");
+  };
+
+  if (loading) {
+    return <h2>Loading posts...</h2>;
+  }
+
+  if (error && !selectedPost) {
+    return <h2>{error}</h2>;
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="container">
+      <h1>Blog Post Explorer</h1>
 
-      <div className="ticks"></div>
+      {!selectedPost && (
+        <>
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="posts">
+            {filteredPosts.map((post) => (
+              <div
+                className="card"
+                key={post.id}
+                onClick={() => showComments(post)}
+              >
+                <h2>{post.title}</h2>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+                <p>{post.body.substring(0, 100)}...</p>
+
+                <button>View Comments</button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {selectedPost && (
+        <div className="details">
+          <button onClick={closeComments}>Close</button>
+
+          <h2>{selectedPost.title}</h2>
+
+          <p>{selectedPost.body}</p>
+
+          <h3>Comments</h3>
+
+          {commentsLoading && <p>Loading comments...</p>}
+
+          {!commentsLoading && error && <p>{error}</p>}
+
+          {!commentsLoading &&
+            !error &&
+            comments.map((comment) => (
+              <div className="comment" key={comment.id}>
+                <h4>{comment.name}</h4>
+                <p>{comment.body}</p>
+                <small>{comment.email}</small>
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
