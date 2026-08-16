@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "title": "Learn React",
+    "description": "Learn React basics",
+    "completed": false,
+    "createdAt": "2026-08-16"
+  },
+  {
+    "id": 2,
+    "title": "Learn Express",
+    "description": "Learn Express basics",
+    "completed": true,
+    "createdAt": "2026-08-16"
+  }
+]
