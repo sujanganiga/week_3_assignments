@@ -12,31 +12,30 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // GET tasks
-  const getTasks = () => {
-    fetch("http://localhost:5000/tasks")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch tasks");
-        }
+  const getTasks=async()=>{
+    try{
+        let f_data=await fetch("http://localhost:5000/tasks");
+        let paarsed_posts=await f_data.json();
 
-        return response.json();
-      })
-      .then((data) => {
-        setTasks(data);
+        setTasks(paarsed_posts);
         setLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
-        setLoading(false);
-      });
-  };
+
+    }
+    catch(error){
+
+      console.log(error);
+      setLoading(false);
+
+
+    }
+  }
+
+  
 
   useEffect(() => {
     getTasks();
   }, []);
 
-  // POST task
   const addTask = (e) => {
     e.preventDefault();
 

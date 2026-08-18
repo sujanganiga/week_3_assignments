@@ -13,58 +13,50 @@ function App() {
 
   const [error, setError] = useState("");
 
-  // Fetch all posts
-  useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/posts")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts");
-        }
 
-        return response.json();
-      })
-      .then((data) => {
-        setPosts(data);
+  const getPosts = async () => {
+    try{
+        let f_posts=await fetch("https://jsonplaceholder.typicode.com/posts");
+        let parsed_posts=await f_posts.json();
+        // console.log(parsed_posts);
+        setPosts(parsed_posts);
         setLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
+
+    }
+    catch(error){
+        console.log(error)
         setLoading(false);
-      });
+    }
+
+  }
+
+  useEffect(() => {
+    getPosts()
   }, []);
 
-  // Filter posts
   const filteredPosts = posts.filter((post) => {
     return post.title.toLowerCase().includes(search.toLowerCase());
   });
 
-  // Fetch comments
-  const showComments = (post) => {
-    setSelectedPost(post);
-    setCommentsLoading(true);
-    setComments([]);
+  const showComments = async(post) => {
 
-    fetch(
-      `https://jsonplaceholder.typicode.com/posts/${post.id}/comments`
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch comments");
-        }
+    try {
+      setSelectedPost(post);
+      setCommentsLoading(true);
+      setComments([]);
+      let f_comments=await fetch(`https://jsonplaceholder.typicode.com/posts/${post.id}/comments`)
+      let parsed_comments=await f_comments.json();
+      setComments(parsed_comments);
+      setCommentsLoading(false)
+      
+    } catch (error) {
+      console.log(error.message);
+      setCommentsLoading(false)
+      
+    }
 
-        return response.json();
-      })
-      .then((data) => {
-        setComments(data);
-        setCommentsLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
-        setCommentsLoading(false);
-      });
   };
 
-  // Close comments
   const closeComments = () => {
     setSelectedPost(null);
     setComments([]);
@@ -103,7 +95,7 @@ function App() {
 
                 <p>{post.body.substring(0, 100)}...</p>
 
-                <button>View Comments</button>
+                <button id="ViewCom">View Comments</button>
               </div>
             ))}
           </div>
@@ -114,11 +106,11 @@ function App() {
         <div className="details">
           <button onClick={closeComments}>Close</button>
 
-          <h2>{selectedPost.title}</h2>
+          <h2 id="comPosTi">{selectedPost.title}</h2>
 
-          <p>{selectedPost.body}</p>
-
-          <h3>Comments</h3>
+          <p id="comPosBody">{selectedPost.body}</p>
+          <div className="actualCom">
+            <h3>Comments</h3>
 
           {commentsLoading && <p>Loading comments...</p>}
 
@@ -133,6 +125,8 @@ function App() {
                 <small>{comment.email}</small>
               </div>
             ))}
+          </div>
+          
         </div>
       )}
     </div>
